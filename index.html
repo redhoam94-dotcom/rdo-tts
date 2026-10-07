@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS: OOP PHP (Class & Object)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .crossword-grid {
+            display: grid;
+            grid-template-columns: repeat(16, minmax(0, 1fr));
+            gap: 2px;
+            background-color: #334155;
+            padding: 4px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 486px;
+            box-sizing: border-box;
+        }
+        .cell {
+            width: 100%;
+            min-width: 0;
+            aspect-ratio: 1;
+            background-color: #0f172a;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+        }
+        .cell.active {
+            background-color: #ffffff;
+        }
+        .cell.active.highlighted {
+            background-color: #e0e7ff;
+        }
+        .cell.active.selected {
+            background-color: #fef08a !important;
+        }
+        .cell-number {
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            color: #475569;
+            user-select: none;
+            pointer-events: none;
+        }
+        .cell-input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #0f172a;
+            caret-color: transparent;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            35% { transform: scale(1.04); box-shadow: 0 0 28px rgba(52, 211, 153, 0.65); }
+            65% { transform: scale(0.98); }
+        }
+        .crossword-grid.shake { animation: shake 0.45s ease-in-out; }
+        .crossword-grid.celebrate { animation: celebrate 0.65s ease-in-out; }
+        @media (prefers-reduced-motion: reduce) {
+            .crossword-grid.shake, .crossword-grid.celebrate { animation: none; }
+        }
+        @media (max-width: 640px) {
+            .cell-input {
+                font-size: 11px;
+            }
+            .cell-number {
+                font-size: 7px;
+                top: 1px;
+                left: 1px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 flex flex-col justify-between">
+    
+    <div class="max-w-5xl mx-auto bg-slate-800 rounded-2xl shadow-2xl p-6 border border-slate-700 w-full">
+        <!-- Header -->
+        <header class="text-center mb-8 border-b border-slate-700 pb-5">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-indigo-400 uppercase tracking-wide flex items-center justify-center gap-2">
+                <span>🧩</span> TTS : OOP PHP (rdo)
+            </h1>
+            <p class="text-slate-400 text-sm mt-1">
+                Materi: Class, Object, Encapsulation,Methods
+            </p>
+        </header>
+
+        <!-- Main Content Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Grid Board Area -->
+            <div class="lg:col-span-7 flex flex-col items-center">
+                <div id="crosswordBoard" class="crossword-grid shadow-xl"></div>
+                
+                <!-- Action Controls (Hanya Cek & Reset) -->
+                <div class="mt-6 flex flex-wrap justify-center gap-3 w-full">
+                    <button onclick="checkAnswers()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-2.5 rounded-lg transition shadow flex items-center gap-2 text-sm">
+                        <span>✅</span> Cek Jawaban
+                    </button>
+                    <button onclick="resetBoard()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-6 py-2.5 rounded-lg transition text-sm flex items-center gap-2">
+                        <span>🔄</span> Reset
+                    </button>
+                </div>
+
+                <!-- Live Result Message -->
+                <div id="resultMessage" class="mt-4 text-center font-bold text-sm md:text-base hidden p-3 rounded-lg w-full"></div>
+            </div>
+
+            <!-- Clues Area -->
+            <div class="lg:col-span-5 space-y-6 bg-slate-900/60 p-5 rounded-xl border border-slate-700/80">
+                
+                <!-- MENDATAR -->
+                <div>
+                    <h2 class="text-base font-bold text-emerald-400 border-b border-emerald-500/30 pb-2 mb-3 flex items-center gap-2">
+                        <span>➡️</span> MENDATAR (ACROSS)
+                    </h2>
+                    <ul class="space-y-2 text-xs md:text-sm text-slate-300">
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(2, 'across')">
+                            <strong class="text-indigo-400">2.</strong> Hak akses privat yang hanya bisa diakses dari dalam class itu sendiri.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(3, 'across')">
+                            <strong class="text-indigo-400">3.</strong> Method khusus yang dipanggil otomatis saat objek pertama kali dibuat.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(5, 'across')">
+                            <strong class="text-indigo-400">5.</strong> Variabel di dalam class untuk menyimpan data/atribut.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(7, 'across')">
+                            <strong class="text-indigo-400">7.</strong> Hak akses terbuka yang bisa diakses dari mana saja.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(8, 'across')">
+                            <strong class="text-indigo-400">8.</strong> Method khusus untuk membaca nilai property private/protected.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(10, 'across')">
+                            <strong class="text-indigo-400">10.</strong> Konsep OOP yang membungkus data dan method serta mengatur aksesnya.
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- MENURUN -->
+                <div>
+                    <h2 class="text-base font-bold text-blue-400 border-b border-blue-500/30 pb-2 mb-3 flex items-center gap-2">
+                        <span>⬇️</span> MENURUN (DOWN)
+                    </h2>
+                    <ul class="space-y-2 text-xs md:text-sm text-slate-300">
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(1, 'down')">
+                            <strong class="text-indigo-400">1.</strong> Cetak biru atau templat logis untuk membuat objek.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(4, 'down')">
+                            <strong class="text-indigo-400">4.</strong> Keyword di PHP untuk membuat objek baru dari class.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(6, 'down')">
+                            <strong class="text-indigo-400">6.</strong> Wujud nyata / hasil instansiasi dari sebuah class.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(9, 'down')">
+                            <strong class="text-indigo-400">9.</strong> Fungsi di dalam class yang menentukan perilaku objek.
+                        </li>
+                        <li class="cursor-pointer hover:text-indigo-300 transition p-1.5 rounded hover:bg-slate-800" onclick="highlightClue(11, 'down')">
+                            <strong class="text-indigo-400">11.</strong> Mekanisme ketika sebuah class mewarisi sifat dan perilaku dari class lain.
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-500 mt-6">
+        Media Pembelajaran Interaktif Pemrograman Web &bull; REDHO ARI MERATNO &bull;
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        const GRID_SIZE = 16;
+
+        /*
+           Koordinat disusun agar setiap kata yang bersilangan memiliki huruf yang sama:
+           CLASS (Down)       bertemu PRIVATE di A dan CONSTRUCT di S.
+           CONSTRUCT (Across) bertemu NEW di N.
+           PROPERTY (Across)  bertemu OBJECT di O.
+           OBJECT (Down)      bertemu PUBLIC di C dan GETTER di T.
+           INHERITANCE (Down) bertemu ENCAPSULATION di N.
+        */
+
+        const words = [
+            // Down Words
+            { number: 1, word: "CLASS",     row: 0, col: 5, direction: "down" },
+            { number: 4, word: "NEW",       row: 3, col: 4, direction: "down" },
+            { number: 6, word: "OBJECT",    row: 6, col: 6, direction: "down" },
+            { number: 9, word: "METHOD",    row: 0, col: 11, direction: "down" },
+            { number: 11, word: "INHERITANCE", row: 5, col: 12, direction: "down" },
+
+            // Across Words
+            { number: 2, word: "PRIVATE",   row: 2, col: 1, direction: "across" },
+            { number: 3, word: "CONSTRUCT", row: 3, col: 2, direction: "across" },
+            { number: 5, word: "PROPERTY",  row: 6, col: 4, direction: "across" },
+            { number: 7, word: "PUBLIC",    row: 10, col: 1, direction: "across" },
+            { number: 8, word: "GETTER",    row: 11, col: 4, direction: "across" },
+            { number: 10, word: "ENCAPSULATION", row: 13, col: 0, direction: "across" }
+        ];
+
+        let gridState = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
+
+        function initBoard() {
+            // Build Matrix
+            words.forEach(w => {
+                let r = w.row;
+                let c = w.col;
+                for (let i = 0; i < w.word.length; i++) {
+                    if (!gridState[r][c]) {
+                        gridState[r][c] = {
+                            letter: w.word[i],
+                            number: (i === 0) ? w.number : null,
+                            words: []
+                        };
+                    } else if (i === 0) {
+                        gridState[r][c].number = w.number;
+                    }
+                    gridState[r][c].words.push(w);
+
+                    if (w.direction === "across") c++;
+                    else r++;
+                }
+            });
+
+            const boardElement = document.getElementById("crosswordBoard");
+            boardElement.innerHTML = "";
+
+            // Render Grid
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cellData = gridState[r][c];
+                    const cellDiv = document.createElement("div");
+                    cellDiv.className = "cell" + (cellData ? " active" : "");
+                    cellDiv.dataset.row = r;
+                    cellDiv.dataset.col = c;
+
+                    if (cellData) {
+                        if (cellData.number) {
+                            const numSpan = document.createElement("span");
+                            numSpan.className = "cell-number";
+                            numSpan.textContent = cellData.number;
+                            cellDiv.appendChild(numSpan);
+                        }
+
+                        const input = document.createElement("input");
+                        input.type = "text";
+                        input.maxLength = 1;
+                        input.className = "cell-input";
+                        input.dataset.row = r;
+                        input.dataset.col = c;
+
+                        input.addEventListener("input", (e) => handleInput(e, r, c));
+                        input.addEventListener("keydown", (e) => handleKeyDown(e, r, c));
+                        input.addEventListener("focus", () => handleFocus(r, c));
+
+                        cellDiv.appendChild(input);
+                    }
+
+                    boardElement.appendChild(cellDiv);
+                }
+            }
+        }
+
+        function handleInput(e, r, c) {
+            const val = e.target.value.toUpperCase();
+            e.target.value = val;
+
+            if (val.length === 1) {
+                const cellData = gridState[r][c];
+                if (cellData && cellData.words.length > 0) {
+                    const primaryWord = cellData.words[0];
+                    let nextR = r + (primaryWord.direction === "down" ? 1 : 0);
+                    let nextC = c + (primaryWord.direction === "across" ? 1 : 0);
+
+                    if (nextR < GRID_SIZE && nextC < GRID_SIZE && gridState[nextR][nextC]) {
+                        const nextInput = document.querySelector(`input[data-row='${nextR}'][data-col='${nextC}']`);
+                        if (nextInput) nextInput.focus();
+                    }
+                }
+            }
+        }
+
+        function handleKeyDown(e, r, c) {
+            let nextR = r;
+            let nextC = c;
+
+            if (e.key === "ArrowRight") nextC++;
+            else if (e.key === "ArrowLeft") nextC--;
+            else if (e.key === "ArrowDown") nextR++;
+            else if (e.key === "ArrowUp") nextR--;
+            else if (e.key === "Backspace" && e.target.value === "") {
+                const cellData = gridState[r][c];
+                if (cellData && cellData.words.length > 0) {
+                    const primaryWord = cellData.words[0];
+                    nextR = r - (primaryWord.direction === "down" ? 1 : 0);
+                    nextC = c - (primaryWord.direction === "across" ? 1 : 0);
+                }
+            }
+
+            if (nextR >= 0 && nextR < GRID_SIZE && nextC >= 0 && nextC < GRID_SIZE && gridState[nextR][nextC]) {
+                const nextInput = document.querySelector(`input[data-row='${nextR}'][data-col='${nextC}']`);
+                if (nextInput) nextInput.focus();
+            }
+        }
+
+        function handleFocus(r, c) {
+            document.querySelectorAll(".cell").forEach(cell => {
+                cell.classList.remove("selected", "highlighted");
+            });
+
+            const currentCell = document.querySelector(`.cell[data-row='${r}'][data-col='${c}']`);
+            if (currentCell) currentCell.classList.add("selected");
+
+            const cellData = gridState[r][c];
+            if (cellData) {
+                cellData.words.forEach(w => {
+                    let wr = w.row;
+                    let wc = w.col;
+                    for (let i = 0; i < w.word.length; i++) {
+                        const targetCell = document.querySelector(`.cell[data-row='${wr}'][data-col='${wc}']`);
+                        if (targetCell && !targetCell.classList.contains("selected")) {
+                            targetCell.classList.add("highlighted");
+                        }
+                        if (w.direction === "across") wc++;
+                        else wr++;
+                    }
+                });
+            }
+        }
+
+        function highlightClue(number, direction) {
+            const word = words.find(w => w.number === number && w.direction === direction);
+            if (word) {
+                const input = document.querySelector(`input[data-row='${word.row}'][data-col='${word.col}']`);
+                if (input) input.focus();
+            }
+        }
+
+        function playFeedbackSound(isCorrect) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return;
+
+            const audio = new AudioContextClass();
+            const notes = isCorrect ? [523.25, 659.25, 783.99] : [220, 164.81];
+            const startTime = audio.currentTime;
+
+            notes.forEach((frequency, index) => {
+                const oscillator = audio.createOscillator();
+                const volume = audio.createGain();
+                const noteStart = startTime + index * 0.13;
+                oscillator.type = isCorrect ? "sine" : "triangle";
+                oscillator.frequency.value = frequency;
+                volume.gain.setValueAtTime(0.0001, noteStart);
+                volume.gain.exponentialRampToValueAtTime(0.16, noteStart + 0.02);
+                volume.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.18);
+                oscillator.connect(volume);
+                volume.connect(audio.destination);
+                oscillator.start(noteStart);
+                oscillator.stop(noteStart + 0.19);
+            });
+
+            audio.resume().catch(() => {});
+            window.setTimeout(() => audio.close(), 700);
+        }
+
+        function playFeedback(isCorrect) {
+            const board = document.getElementById("crosswordBoard");
+            board.classList.remove("shake", "celebrate");
+            void board.offsetWidth;
+            board.classList.add(isCorrect ? "celebrate" : "shake");
+            board.addEventListener("animationend", () => {
+                board.classList.remove("shake", "celebrate");
+            }, { once: true });
+
+            if ("vibrate" in navigator) {
+                navigator.vibrate(isCorrect ? [90, 50, 140] : [240, 70, 240]);
+            }
+            playFeedbackSound(isCorrect);
+        }
+
+        function checkAnswers() {
+            let allCorrect = true;
+            let totalCells = 0;
+            let correctCells = 0;
+
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (gridState[r][c]) {
+                        totalCells++;
+                        const input = document.querySelector(`input[data-row='${r}'][data-col='${c}']`);
+                        const val = input ? input.value.toUpperCase() : "";
+
+                        if (val === gridState[r][c].letter) {
+                            correctCells++;
+                            input.classList.remove("text-red-500");
+                            input.classList.add("text-emerald-600");
+                        } else {
+                            allCorrect = false;
+                            if (val !== "") {
+                                input.classList.remove("text-emerald-600");
+                                input.classList.add("text-red-500");
+                            }
+                        }
+                    }
+                }
+            }
+
+            const resultMsg = document.getElementById("resultMessage");
+            resultMsg.classList.remove("hidden", "bg-emerald-900/50", "text-emerald-300", "bg-amber-900/50", "text-amber-300");
+
+            if (allCorrect) {
+                resultMsg.textContent = "🎉 Luar Biasa! Semua jawaban Anda 100% Benar!";
+                resultMsg.classList.add("bg-emerald-900/50", "text-emerald-300", "border", "border-emerald-500/50");
+            } else {
+                resultMsg.textContent = `💡 Hasil: ${correctCells} dari ${totalCells} huruf benar. Huruf yang salah ditandai warna merah.`;
+                resultMsg.classList.add("bg-amber-900/50", "text-amber-300", "border", "border-amber-500/50");
+            }
+            playFeedback(allCorrect);
+        }
+
+        function resetBoard() {
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (gridState[r][c]) {
+                        const input = document.querySelector(`input[data-row='${r}'][data-col='${c}']`);
+                        if (input) {
+                            input.value = "";
+                            input.classList.remove("text-red-500", "text-emerald-600");
+                        }
+                    }
+                }
+            }
+            const resultMsg = document.getElementById("resultMessage");
+            resultMsg.classList.add("hidden");
+            document.querySelectorAll(".cell").forEach(c => c.classList.remove("selected", "highlighted"));
+        }
+
+        window.onload = initBoard;
+    </script>
+</body>
+</html>
